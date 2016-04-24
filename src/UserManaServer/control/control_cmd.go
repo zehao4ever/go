@@ -1,0 +1,40 @@
+package control
+
+const (
+	DISPATCH_AUTH              = "0" //分配权限
+	ADD_USER                   = "1"
+	DEL_USER                   = "2"
+	ADD_BILLbOARD              = "3"
+	VIEW_BILLBOARD             = "4"
+	MODIFY_BILLBOARD           = "5"
+	DEL_BILLBOARD              = "6"
+	VIEW_ANY_INFO              = "7"
+	MODIFY_ANY_INFO            = "8"
+	VIEW_ITSELF_INFO           = "9"  //用户查看自己的信息
+	MODIFY_ITSELF_INFO         = "10" //
+	LOGINON                    = "11"
+	MODIFY_PWD                 = "12"
+	OVERDUE_TOKEN              = "200"
+	LOGIN_FAIL                 = "011"
+	LOGIN_SUCCESS              = "111"
+	ADD_USER_FAIL              = "001"
+	ADD_USER_SUCCESS           = "101"
+	DEL_USER_FAIL              = "002"
+	DEL_USER_SUCCESS           = "102"
+	ADD_BILLbOARD_FAIL         = "003"
+	ADD_BILLbOARD_SUCCESS      = "103"
+	VIEW_BILLBOARD_FAIL        = "004"
+	VIEW_BILLBOARD_SUCCESS     = "104"
+	MODIFY_BILLBOARD_FAIL      = "005"
+	MODIFY_BILLBOARD_SUCCESS   = "105"
+	DEL_BILLBOARD_FAIL         = "006"
+	DEL_BILLBOARD_SUCCESS      = "106"
+	VIEW_ANY_INFO_FAIL         = "007"
+	VIEW_ANY_INFO_SUCCESS      = "107"
+	MODIFY_ANY_INFO_FAIL       = "008"
+	MODIFY_ANY_INFO_SUCCESS    = "108"
+	VIEW_ITSELF_INFO_FAIL      = "009"
+	VIEW_ITSELF_INFO_SUCCESS   = "109"
+	MODIFY_ITSELF_INFO_FAIL    = "010"
+	MODIFY_ITSELF_INFO_SUCCESS = "110"
+)

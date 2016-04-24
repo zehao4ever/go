@@ -1,0 +1,68 @@
+package controller
+
+import (
+	"Server/dao"
+	"encoding/json"
+	//	"fmt"
+	//	"log"
+	//	"net"
+)
+
+const (
+	RESULT_LOGIN_SUCCESS = 1
+	RESULT_LOGIN_FAIL    = 2
+	RESULT_REG_SUCCESS   = 3
+	RESULT_REG_FAIL      = 4
+)
+
+func Login(arg_data TranData) (TranData, error) {
+	userInfo := arg_data.UserInfo
+	var user dao.User
+	if err := json.Unmarshal([]byte(userInfo), &user); err != nil {
+		arg_data.Result = RESULT_LOGIN_FAIL
+		return arg_data, err
+	}
+	if exist, err := dao.CheckUser(user.Uid, user.Pass); !exist || err != nil {
+		arg_data.Result = RESULT_LOGIN_FAIL
+		return arg_data, err
+	}
+	puser, err := dao.QueryUserInfo(user.Uid)
+	if err != nil {
+		arg_data.Result = RESULT_LOGIN_FAIL
+		return arg_data, err
+	}
+
+	var buf []byte
+	buf, err = json.Marshal(*puser)
+	if err != nil {
+		arg_data.Result = RESULT_LOGIN_FAIL
+		return arg_data, err
+	}
+	arg_data.UserInfo = string(buf)
+	arg_data.Result = RESULT_LOGIN_SUCCESS
+	return arg_data, nil
+}
+
+func Register(arg_data TranData) (TranData, error) {
+	userInfo := arg_data.UserInfo
+	var user dao.User
+	if err := json.Unmarshal([]byte(userInfo), &user); err != nil {
+		arg_data.Result = RESULT_LOGIN_FAIL
+		return arg_data, err
+	}
+	id, err := dao.AddUser(user)
+	if err != nil {
+		arg_data.Result = RESULT_REG_FAIL
+		return arg_data, err
+	}
+	user.Uid = id
+	userBuf, err := json.Marshal(user)
+	if err != nil {
+		arg_data.Result = RESULT_REG_FAIL
+		return arg_data, err
+	}
+	arg_data.SendId = id
+	arg_data.UserInfo = string(userBuf)
+	arg_data.Result = RESULT_REG_SUCCESS
+	return arg_data, nil
+}

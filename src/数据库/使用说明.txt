@@ -1,0 +1,286 @@
+
+--------------------------使用须知--------------------------------
+	1.把dao文件夹复制到你的工程目录下，如
+		--yourProjectName
+		  -dao
+		    --base.go
+		    --authDao.go
+		    --userDao.go
+		    .....
+	2.导入时import "YourProjestName/dao"
+	3.记得前往dao/base.go的InitDB()方法中修改数据库密码
+	4.在调用数据库接口前先调用base.go文件中的dao.Init()方法初始化数据库
+	5.在调用时均用dao.XXX()方式
+
+----------------------------最近更新------------------------
+	1. 公告的结构体
+	2. 公告的表结构
+	3. 但接口返回一个结构体时，均改为返回相应结构体的指针
+	4. 添加用户返回用户id ,若添加失败返回0
+	5. 添加公告时，返回公告id,添加失败返回0
+	6. 添加角色，权限同上
+
+----------------------------------------------对象结构体---------------------------------------------------------
+
+type User struct {
+	Uid   int    `json:"id,string"`
+	Name  string `json:"name"`
+	Pass  string `json:"pwd"`
+	Age   int    `json:"age,string"`
+	Sex   int    `json:"sex,string"`
+	Intro string `json:"intro"`
+	Role  int    `json:"role,string"`
+}
+
+type Role struct {
+	Rid   int    `json:"role,string"`
+	Name  string `json:"role_name"`
+	Desc  string `json:"role_desc"`
+	Auths []int
+}
+
+type Auth struct {
+	Aid     int    `json:"auth,string"`
+	Name    string `json:"auth_name"`
+	Desc    string `json:"auth_desc"`
+	Role_id []int  `json:"role"`
+}
+
+type Billboard struct {
+	Bid        int    `json:"id,string"`
+	Content    string `json:"content"`
+	CreateTime string `json:"bill_create_time"`
+	User_id    int    `json:"user_id,string"`
+	User_name  string `json:"name"`
+}
+-------------------------------------------------数据库设计----------------------------------------------
+
+
+对象 - 关系 
+	表：
+	用户（user）：账号(uid)，用户名(uname)，密码(pwd)，性别(sex)，年龄(age)，简介(intro)，角色(role)
+	用户黑名单（user_blacklist):用户id,加入黑名单的时间(join_time)	
+	好友关系：第一个用户id,第二个用户id，创建关系的时间
+	公告：id，所属用户id,公告标题，公告描述，创建时间，最后一次修改时间，所属用户id
+	角色：id,角色名称，角色描述，
+	权限：id，权限名称，权限描述
+	角色-权限（用于维护角色-权限多对多的关系） 
+
+
+角色详情：
+	1.一般用户
+	2：超级管理员
+	3：管理员
+	
+权限详情：(删除用户，添加用户，添加公告，删除公告，操作黑名单，操作角色，操作权限)
+	1: 操作用户(管理员包括用户本身拥有此权限)
+	2: 操作公告（插入，更新和删除）
+	3：操作黑名单
+	4：操作权限
+	5. 操作角色
+	
+
+----------------------------------------------------接口------------------------------------------------
+	关于用户：
+		1.添加用户
+			func AddUser(User) (int,error)
+		2.删除用户
+			func DelUser(int)(bool,error)
+				形参：user_id
+		3.获取用户基本信息
+			func QueryUserInfo(int) (*User,error)
+				形参：user_id
+				返回：若不存在该用户返回nil
+		4.修改用户基本信息
+			func ModifyUser(User) (bool,error)
+		5.判断用户是否存在
+			func IsUserExist(int) (bool,error)
+		6.获取密码
+			func QueryUserPass(int)(strig,error)
+		7.修改密码
+			func ModifyUserPass(int,string) (bool,error)
+				形参：user_id,pwd
+		8.修改用户角色
+			func ModifyUserRole(int,int)(bool,error)
+				形参：user_id,role_id
+		9.获取用户角色类型
+			func QueryUserRole(int) (int,error)
+				形参：user_id
+		10.获取用户权限
+			func QueryUserAuth(int)([]int,error)
+				形参：user_id
+	关于黑名单：
+		1.获取所有黑名单用户
+			func QueryBlacklist()([]int,error)
+				返回：元素为user_id的整型数组
+		2.把用户加入黑名单
+			func InsertIntoBlacklist(int)(bool,error)
+				形参：user_id
+		3.把用户移除黑名单
+			func DelFromBlacklist(int)(bool,err)
+				形参：user_id
+		3.判断指定用户是否在黑名单中
+			func IsInBlacklist(int)(bool,error)
+		4.更新指定用户在黑名单中的时间
+			func UpdateTimeInBlacklist(int)(bool,error)
+				形参：user_id
+	关于角色：
+		1.新增角色
+			func InsertRole(Role)(int,error)
+		2.删除角色
+			func DelRole(int)(bool,error)
+		3.获取角色对象
+			func QueryRole(int)(*Role,error)
+	
+		5.修改角色权限
+			func ModifyRoleAuth(int,[]int)(bool,error)
+				形参：role_id,元素为权限id的整型数组
+
+		6.获取角色权限
+			func QueryRoleAuth(int)([]int,error)
+				形参：role_id
+		7.修改角色描述，简介
+			func ModifyRoleInfo(Role)(bool.error)
+	关于权限：
+		1.新增权限
+			func InsertAuth(Auth) (int,error)
+		2.删除权限
+			func DelAuth(int)(bool,error)
+				形参：auth_id
+		3.获取拥有指定权限的全部角色
+			func QueryAuthRoles(int)([]int,error)
+		4.修改权限
+			func ModifyAuth(Auth)(bool,error)
+		5.获取权限对象
+			func QueryAuthDesc(int)(*Auth,error)
+		6.删除角色对应的指定权限
+			func DelAuthOfRole(arg_rid, arg_aid int) (bool, error) 
+		7.角色增加权限
+			func AddAuthsForRole(arg_rid int, arg_aids []int) (bool, error) 
+		8.删除指定权限与所有角色的对应记录
+			func DelRolesOfAuth(arg_aid int) (bool, error)
+		9.删除指定角色所有的权限之间对应记录
+			func DelAuthsOfRole(arg_rid int) (bool, error) 
+		10.把指定权限分配给指定角色
+			func AddRolesForAuth(arg_aid int, arg_rids []int) (bool, error) 
+			
+	关于好友关系：
+		1.添加好友
+			InsertFriend(int,int)(bool,error)
+				形参：user_id,user_id
+		2.删除好友
+			DelFriend(int,int)(bool,error)
+		3.查询所有好友
+			QueryFriends(int)([]int,error)
+		4.获取建立好友关系的时间
+			QueryBeFriendTime(int,int)(string,error)
+			返回的时间为字符串：xxxx-xx-xx xx:xx:xx
+	关于公告：
+		1.添加公告
+			InsertBillboard(Billboard) (int,error)
+				形参：Billboard中的两个时间中的create_time为时间字符串xxxx-xx-xx xx:xx:xx
+		2.删除公告
+			DelBillboard(int)(bool,error)
+	
+		4.查询公告
+			QueryBillboard(int)(*Billboard,error)
+		
+		5.获取用户所有的公告id
+			func QueryBillboardIdOfUser(arg_id int) ([]int, error) 
+
+---------------------------------------创建数据库语句--------------------------------------------------------
+	CREATE DATABASE IF NOT EXISTS cstdb DEFAULT CHARSET utf8;
+
+//用户表
+mysql> CREATE TABLE user
+    -> (
+    -> user_id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    -> name varchar(20),
+    -> pwd varchar(20),
+    -> sex int,
+    -> age int,
+    -> intro varchar(100),
+    -> role_id int NOT NULL
+    -> );
+//黑名单表
+mysql> CREATE TABLE blacklist
+    -> (
+    -> user_id int NOT NULL PRIMARY KEY,
+    -> join_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    -> );
+
+//好友关系
+mysql> CREATE TABLE friendship
+    -> (
+    -> first_user_id int NOT NULL,
+    -> second_user_id int NOT NULL,
+    -> create_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -> PRIMARY KEY (first_user_id,second_user_id)
+    -> );
+
+公告
+mysql>  CREATE TABLE billboard
+    ->  (
+    ->  bill_id int PRIMARY KEY AUTO_INCREMENT,
+    ->  content varchar(500),
+    ->  create_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ->  user_id int,
+    ->  user_name varchar(30),
+    ->  FOREIGN KEY (user_id) REFERENCES user(user_id)
+    ->  );
+
+角色
+mysql> CREATE TABLE role
+    -> (
+    -> role_id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    -> role_name varchar(20) NOT NULL,
+    -> role_desc varchar(100)
+    -> );
+
+权限
+mysql> CREATE TABLE auth
+    -> (
+    -> auth_id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    -> auth_name varchar(20) NOT NULL,
+    -> auth_desc varchar(50)
+    -> );
+
+角色-权限
+mysql> CREATE TABLE role_auth
+    -> (
+    -> role_id int NOT NULL,
+    -> auth_id int NOT NULL,
+    -> PRIMARY KEY (role_id,auth_id)
+    -> );
+    --------------------------------数据库应初始化的数据------------------------------------------
+	1添加预定角色
+	    mysql> INSERT INTO role
+		-> (role_id,role_name,role_desc)
+		-> VALUES (1,"user","");
+	    mysql> INSERT INTO role
+		-> (role_id,role_name,role_desc)
+		-> VALUES (2,"super_admin","");
+	    mysql> INSERT INTO role
+		-> (role_id,role_name,role_desc)
+		-> VALUES (3,"admin","");
+	
+	2.添加预定权限
+		mysql> insert into auth (auth_id,auth_name)
+		    -> value(1,"do_user");
+		Query OK, 1 row affected (0.00 sec)
+
+		mysql> insert into auth (auth_id,auth_name)
+		    -> value(2,"do_billboard");
+		Query OK, 1 row affected (0.00 sec)
+
+		mysql> insert into auth (auth_id,auth_name)
+		    -> value(3,"do_blacklist");
+		Query OK, 1 row affected (0.00 sec)
+
+		mysql> insert into auth (auth_id,auth_name)
+		    -> value(4,"do_auth");
+		Query OK, 1 row affected (0.00 sec)
+
+		mysql> insert into auth (auth_id,auth_name)
+		    -> value(5,"do_role");
+		Query OK, 1 row affected (0.00 sec)
